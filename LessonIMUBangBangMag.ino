@@ -27,6 +27,7 @@ BNO080 myIMU;
 
 #define BLUELED 13
 #define YELLOWLED 14
+
 #define LIMIT 0.3
 
 #define ARRAYSIZE 4
@@ -38,15 +39,19 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println();
-  Serial.println("BNO080 Read Example");
+  
 
   Wire.begin();
 
 
   pinMode(BLUELED, OUTPUT); 
   pinMode(YELLOWLED, OUTPUT); 
-  myIMU.begin();
-  
+
+  while(myIMU.begin()==false){
+    Serial.println("IMU ERROR");  
+    delay(100);
+  }
+  Serial.println("IMU Success");  
   Wire.setClock(400000); //Increase I2C data rate to 400kHz
   myIMU.enableGyro(50); //Send data update every 50ms
   //myIMU.enableMagnetometer(50); //Send data update every 50ms
@@ -71,6 +76,10 @@ float smooth(float tmp){
 }
 
 
+void deactivate(){
+  digitalWrite(BLUELED, LOW);
+  digitalWrite(YELLOWLED, LOW);
+}
 
 float activate(float gVal, float mVal){   
   gVal=smooth(gVal);
@@ -79,22 +88,17 @@ float activate(float gVal, float mVal){
 if(mVal>=0){
   if(gVal>LIMIT)
     digitalWrite(BLUELED, HIGH);
-  else
-    digitalWrite(BLUELED, LOW);
-
+  
   if(gVal<-LIMIT)
     digitalWrite(YELLOWLED, HIGH);
-  else
-    digitalWrite(YELLOWLED, LOW);
+  
   }
   else {
-  if(gVal>LIMIT)
-    digitalWrite(BLUELED, LOW);
+  if(gVal>LIMIT){}
   else
     digitalWrite(BLUELED, HIGH);
 
-  if(gVal<-LIMIT)
-    digitalWrite(YELLOWLED, LOW);
+  if(gVal<-LIMIT){}
   else
     digitalWrite(YELLOWLED, HIGH);
   }
@@ -109,17 +113,6 @@ void rotation(){
     gX = myIMU.getGyroX();
     gY = myIMU.getGyroY();
     gZ = myIMU.getGyroZ();
-
-    
-    Serial.print(gX, 2);
-    Serial.print(F(","));
-    Serial.print(gY, 2);
-    Serial.print(F(","));
-    Serial.print(gZ, 2);
-    Serial.print(F(","));
-
-    Serial.println();
-    
   }
 }
 
@@ -131,50 +124,63 @@ void mag(){
     mX = myIMU.getMagX();
     mY = myIMU.getMagY();
     mZ = myIMU.getMagZ();
-
-    
-    Serial.print(mX, 2);
-    Serial.print(F(","));
-    Serial.print(mY, 2);
-    Serial.print(F(","));
-    Serial.print(mZ, 2);
-    Serial.print(F(","));
-
-    Serial.println();    
   }
 }
 
 
 unsigned long lastTime=0;
 int step=0;
+
+
 void loop()
 {
   unsigned long currentTime=millis();
 
-  if(currentTime<lastTime+50)
+  if(currentTime<lastTime+30)
     return;
   else
     lastTime=currentTime;
 
+  Serial.print(gX, 2);
+  Serial.print(F(","));
+  Serial.println(sqrt(mX), 2);
+
+
+
   switch (step){
 
   case 0: 
-    myIMU.enableGyro(50);    
+    myIMU.enableGyro(10);    
     break;
   case 1:
     rotation();    
     break;
   case 2:
-    myIMU.enableMagnetometer(50);
+    deactivate();
+    myIMU.enableMagnetometer(10);
     break;  
   case 3:
     mag();
-    break;    
-  case 4:
     activate(gX,mX);
-    break;        
+    break;      
   }
 
   step++;
   if (step>5) step=0;  
+}
+
+
+void loop1(){
+  step++;
+  if(step%2==0){
+    Serial.println("ON");
+    digitalWrite(YELLOWLED, LOW);
+    digitalWrite(BLUELED, LOW);
+  }
+  else{
+    Serial.println("OFF");
+    digitalWrite(YELLOWLED, HIGH);
+    digitalWrite(BLUELED, HIGH);
+  }
+  delay(5000);
 }
