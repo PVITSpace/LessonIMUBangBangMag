@@ -83,25 +83,31 @@ void deactivate(){
 
 float activate(float gVal, float mVal){   
   gVal=smooth(gVal);
+  Serial.print(gVal);Serial.print(", ");Serial.println(mVal);
 
-
+  
 if(mVal>=0){
+  
   if(gVal>LIMIT)
     digitalWrite(BLUELED, HIGH);
   
   if(gVal<-LIMIT)
     digitalWrite(YELLOWLED, HIGH);
   
-  }
-  else {
-  if(gVal>LIMIT){}
-  else
-    digitalWrite(BLUELED, HIGH);
+  } 
 
-  if(gVal<-LIMIT){}
-  else
+else{
+
+ if(gVal>LIMIT)
     digitalWrite(YELLOWLED, HIGH);
-  }
+  
+  if(gVal<-LIMIT)
+    digitalWrite(BLUELED, HIGH);
+    
+  
+}
+
+  
 }
 
 
@@ -136,14 +142,12 @@ void loop()
 {
   unsigned long currentTime=millis();
 
+
   if(currentTime<lastTime+30)
     return;
   else
     lastTime=currentTime;
-
-  Serial.print(gX, 2);
-  Serial.print(F(","));
-  Serial.println(sqrt(mX), 2);
+  Serial.println(step);
 
 
 
